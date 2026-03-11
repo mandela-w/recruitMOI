@@ -3,14 +3,13 @@ spring:
     name: recruitment-backend
 
   datasource:
-    url: ${DATABASE_URL:${DB_URL:jdbc:postgresql://localhost:5432/recruitment_db}}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 5
-      ssl: true
       data-source-properties:
         sslmode: require
 
