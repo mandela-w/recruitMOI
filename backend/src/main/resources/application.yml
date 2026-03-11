@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: recruitment-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/recruitment_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 15MB
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:mandelawilsonn@gmail.com}
+    password: ${MAIL_PASSWORD:xlkfyvbbvnfwinjm}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        connectiontimeout: 5000
+        timeout: 5000
+        writetimeout: 5000
+
+server:
+  port: 8080
+
+app:
+  name: "Recruitment System"
+  frontend-url: http://localhost:3000
+
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-days: 7
+
+  file:
+    upload-dir: ${FILE_UPLOAD_DIR:uploads/cvs}
+    max-size-bytes: 10485760 # 10MB
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: WARN
+    com.recruitment: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.web: WARN
+    com.zaxxer.hikari: WARN
+    org.apache.catalina: WARN
+    org.springframework.boot: INFO
