@@ -28,3 +28,25 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# Backend build
+backend/target/
+backend/uploads/
+
+# Frontend build
+frontend/.next/
+frontend/node_modules/
+frontend/.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

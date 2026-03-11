@@ -1,0 +1,27 @@
+.env
+.env.local
+.env.production
+
+# Maven
+target/
+*.class
+
+# Uploaded CVs
+uploads/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
