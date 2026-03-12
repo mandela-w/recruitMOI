@@ -3,7 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userRepository, dashboardRepository } from "@/lib/api/users";
 import type { UserFilters } from "@/types";
-import type { CreateUserFormData, UpdateUserFormData } from "@/lib/validators/schemas";
+import type {
+  CreateUserFormData,
+  UpdateUserFormData,
+} from "@/lib/validators/schemas";
 
 export const USER_KEYS = {
   all: ["users"] as const,
@@ -16,7 +19,6 @@ export const DASHBOARD_KEYS = {
   stats: ["dashboard-stats"] as const,
 };
 
-// ── Hook: paginated users list ────────────────────────────────
 export function useUsers(filters?: UserFilters) {
   return useQuery({
     queryKey: USER_KEYS.list(filters ?? {}),
@@ -24,7 +26,6 @@ export function useUsers(filters?: UserFilters) {
   });
 }
 
-// ── Hook: single user ─────────────────────────────────────────
 export function useUser(id: string) {
   return useQuery({
     queryKey: USER_KEYS.detail(id),
@@ -33,7 +34,6 @@ export function useUser(id: string) {
   });
 }
 
-// ── Hook: create user ─────────────────────────────────────────
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -44,7 +44,6 @@ export function useCreateUser() {
   });
 }
 
-// ── Hook: update user ─────────────────────────────────────────
 export function useUpdateUser(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -56,18 +55,17 @@ export function useUpdateUser(id: string) {
   });
 }
 
-// ── Hook: toggle user status ──────────────────────────────────
 export function useToggleUserStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => userRepository.toggleStatus(id),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      userRepository.toggleStatus(id, isActive),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
     },
   });
 }
 
-// ── Hook: delete user ─────────────────────────────────────────
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -78,11 +76,10 @@ export function useDeleteUser() {
   });
 }
 
-// ── Hook: dashboard stats ─────────────────────────────────────
 export function useDashboardStats() {
   return useQuery({
     queryKey: DASHBOARD_KEYS.stats,
     queryFn: dashboardRepository.getStats,
-    staleTime: 2 * 60 * 1000, // 2 min
+    staleTime: 2 * 60 * 1000,
   });
 }

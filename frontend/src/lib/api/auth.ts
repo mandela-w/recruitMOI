@@ -1,16 +1,47 @@
 import apiClient from "./client";
-import type { AuthResponse, LoginCredentials, RegisterData, User } from "@/types";
+import type {
+  AuthResponse,
+  LoginCredentials,
+  RegisterData,
+  User,
+  ApiResponse,
+} from "@/types";
 
-// ── Auth Repository (Repository Pattern) ─────────────────────
 export const authRepository = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const { data } = await apiClient.post<AuthResponse>("/auth/login", credentials);
-    return data;
+    const { data } = await apiClient.post<
+      ApiResponse<{
+        accessToken: string;
+        refreshToken: string;
+        tokenType: string;
+        expiresIn: number;
+        user: User;
+      }>
+    >("/auth/login", credentials);
+
+    return {
+      user: data.data.user,
+      token: data.data.accessToken,
+      refreshToken: data.data.refreshToken,
+    };
   },
 
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const { data } = await apiClient.post<AuthResponse>("/auth/register", userData);
-    return data;
+    const { data } = await apiClient.post<
+      ApiResponse<{
+        accessToken: string;
+        refreshToken: string;
+        tokenType: string;
+        expiresIn: number;
+        user: User;
+      }>
+    >("/auth/register", userData);
+
+    return {
+      user: data.data.user,
+      token: data.data.accessToken,
+      refreshToken: data.data.refreshToken,
+    };
   },
 
   async logout(): Promise<void> {
@@ -18,21 +49,18 @@ export const authRepository = {
   },
 
   async refreshToken(refreshToken: string): Promise<{ token: string }> {
-    const { data } = await apiClient.post<{ token: string }>("/auth/refresh", {
-      refreshToken,
-    });
-    return data;
+    const { data } = await apiClient.post<
+      ApiResponse<{
+        accessToken: string;
+        refreshToken: string;
+      }>
+    >("/auth/refresh-token", { refreshToken });
+
+    return { token: data.data.accessToken };
   },
 
   async getCurrentUser(): Promise<User> {
-    const { data } = await apiClient.get<User>("/auth/me");
-    return data;
-  },
-
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await apiClient.post("/auth/change-password", {
-      currentPassword,
-      newPassword,
-    });
+    const { data } = await apiClient.get<ApiResponse<User>>("/me");
+    return data.data;
   },
 };

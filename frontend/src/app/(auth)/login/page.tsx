@@ -12,44 +12,12 @@ import {
   Lock,
   ArrowRight,
   BriefcaseBusiness,
-  Sparkles,
-  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuthStore } from "@/store/authStore";
 import { loginSchema, type LoginFormData } from "@/lib/validators/schemas";
 import type { Role } from "@/types";
-
-const demoCredentials: {
-  role: Role;
-  email: string;
-  password: string;
-  label: string;
-  color: string;
-}[] = [
-  {
-    role: "APPLICANT",
-    email: "applicant@demo.com",
-    password: "Demo@1234",
-    label: "Applicant",
-    color: "hover:bg-brand-600 hover:text-white hover:border-brand-600",
-  },
-  {
-    role: "HR",
-    email: "hr@demo.com",
-    password: "Demo@1234",
-    label: "HR Manager",
-    color: "hover:bg-brand-700 hover:text-white hover:border-brand-700",
-  },
-  {
-    role: "SUPER_ADMIN",
-    email: "admin@demo.com",
-    password: "Demo@1234",
-    label: "Super Admin",
-    color: "hover:bg-amber-500 hover:text-white hover:border-amber-500",
-  },
-];
 
 const ROLE_REDIRECT: Record<Role, string> = {
   APPLICANT: "/applicant/apply",
@@ -61,7 +29,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { login, isLoading, error, clearError } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [quickLoading, setQuickLoading] = useState<Role | null>(null);
 
   const {
     register,
@@ -80,17 +47,6 @@ export default function LoginPage() {
     } catch {}
   };
 
-  const handleQuickLogin = async (cred: (typeof demoCredentials)[0]) => {
-    clearError();
-    setQuickLoading(cred.role);
-    try {
-      await login({ email: cred.email, password: cred.password });
-      router.push(ROLE_REDIRECT[cred.role]);
-    } catch {
-      setQuickLoading(null);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-mesh flex">
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden bg-gradient-to-br from-brand-950 via-brand-900 to-brand-950 items-center justify-center p-12">
@@ -107,7 +63,6 @@ export default function LoginPage() {
           }}
         />
         <div className="relative z-10 max-w-lg text-white">
-          {/* Brand */}
           <div className="flex items-center gap-3 mb-10">
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
               <BriefcaseBusiness className="w-6 h-6 text-white" />
@@ -162,7 +117,6 @@ export default function LoginPage() {
 
       <div className="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md animate-slide-up">
-          {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-glow">
               <BriefcaseBusiness className="w-4 h-4 text-white" />
@@ -179,48 +133,6 @@ export default function LoginPage() {
             <p className="text-surface-500 mt-2 text-sm">
               Sign in to continue to your account
             </p>
-          </div>
-
-          <div className="mb-6 p-4 rounded-xl bg-brand-50 border border-brand-100">
-            <p className="text-xs font-semibold text-brand-700 mb-3 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              Quick Access — click to log in instantly
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {demoCredentials.map((cred) => (
-                <button
-                  key={cred.role}
-                  onClick={() => handleQuickLogin(cred)}
-                  disabled={isLoading || quickLoading !== null}
-                  className={`relative text-xs px-3 py-2.5 rounded-lg bg-white border border-brand-200 text-brand-700 font-semibold transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed ${cred.color}`}
-                >
-                  {quickLoading === cred.role ? (
-                    <span className="flex items-center justify-center gap-1.5">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Logging in...
-                    </span>
-                  ) : (
-                    <>
-                      <span className="block">{cred.label}</span>
-                      <span className="block text-[10px] font-normal opacity-70 mt-0.5">
-                        one click
-                      </span>
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-brand-500 mt-2.5 text-center">
-              Each button logs you in as that role with demo data
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-surface-200" />
-            <span className="text-xs text-surface-400 font-medium">
-              or sign in manually
-            </span>
-            <div className="flex-1 h-px bg-surface-200" />
           </div>
 
           <form
@@ -269,10 +181,10 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full"
-              isLoading={isLoading && quickLoading === null}
+              isLoading={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              {isLoading && quickLoading === null ? "Signing in..." : "Sign In"}
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 

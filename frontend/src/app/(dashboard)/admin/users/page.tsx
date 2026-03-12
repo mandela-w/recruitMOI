@@ -16,7 +16,6 @@ import {
   Users,
   UserCheck,
   UserX,
-  ChevronDown,
 } from "lucide-react";
 import { userRepository } from "@/lib/api/users";
 import { RoleBadge, Badge } from "@/components/ui/Badge";
@@ -34,15 +33,21 @@ import { formatDate, getInitials, cn } from "@/lib/utils";
 import type { Role, User as UserType } from "@/types";
 
 const ROLE_OPTIONS = [
+  { value: "HR", label: "HR Manager" },
+  { value: "SUPER_ADMIN", label: "Super Admin" },
+];
+
+const ROLE_FILTER_OPTIONS = [
+  { value: "", label: "All Roles" },
   { value: "APPLICANT", label: "Applicant" },
   { value: "HR", label: "HR Manager" },
   { value: "SUPER_ADMIN", label: "Super Admin" },
 ];
 
 const AVATAR_COLOR: Record<Role, string> = {
-  APPLICANT: "from-green-500  to-green-700",
-  HR: "from-sky-500    to-sky-700",
-  SUPER_ADMIN: "from-amber-500  to-amber-700",
+  APPLICANT: "from-green-500 to-green-700",
+  HR: "from-sky-500 to-sky-700",
+  SUPER_ADMIN: "from-amber-500 to-amber-700",
 };
 
 function SummaryPill({
@@ -89,18 +94,19 @@ function CreateUserModal({
     formState: { errors },
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { role: "APPLICANT" },
+    defaultValues: { role: "HR" },
   });
 
   const mutation = useMutation({
     mutationFn: userRepository.create,
     onSuccess: () => {
-      ok("User Created", "New account created.");
+      ok("User Created", "Account created and credentials sent by email.");
       reset();
       onSuccess();
       onClose();
     },
-    onError: (e: { message?: string }) => err("Failed", e.message),
+    onError: (e: { message?: string }) =>
+      err("Failed", e.message ?? "Could not create user."),
   });
 
   return (
@@ -108,7 +114,7 @@ function CreateUserModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Create New User"
-      description="Fill in the details to add a system account."
+      description="Fill in the details to add a system account. Credentials will be emailed automatically."
       size="md"
     >
       <form
@@ -222,6 +228,94 @@ function DeleteModal({
   );
 }
 
+interface UserRowProps {
+  user: UserType;
+  index: number;
+  isToggling: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+}
+
+function UserRow({
+  user,
+  index,
+  isToggling,
+  onToggle,
+  onDelete,
+}: UserRowProps) {
+  return (
+    <tr
+      className="hover:bg-surface-50/50 transition-colors animate-fade-in"
+      style={{ animationDelay: `${index * 30}ms` }}
+    >
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-xs font-bold flex-shrink-0",
+              AVATAR_COLOR[user.role],
+            )}
+          >
+            {getInitials(user.firstName, user.lastName)}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-surface-900">
+              {user.firstName} {user.lastName}
+            </p>
+            <p className="text-xs text-surface-400">{user.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <RoleBadge role={user.role} />
+      </td>
+      <td className="px-6 py-4">
+        <Badge variant={user.isActive ? "success" : "default"}>
+          {user.isActive ? "Active" : "Inactive"}
+        </Badge>
+      </td>
+      <td className="px-6 py-4">
+        <p className="text-xs text-surface-500">{formatDate(user.createdAt)}</p>
+      </td>
+      <td className="px-6 py-4">
+        <p className="text-xs text-surface-500">
+          {user.lastLoginAt ? formatDate(user.lastLoginAt) : "Never"}
+        </p>
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={onToggle}
+            disabled={isToggling}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border disabled:opacity-50",
+              user.isActive
+                ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100",
+            )}
+          >
+            {user.isActive ? (
+              <>
+                <ToggleRight className="w-3.5 h-3.5" /> Deactivate
+              </>
+            ) : (
+              <>
+                <ToggleLeft className="w-3.5 h-3.5" /> Activate
+              </>
+            )}
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 rounded-lg text-surface-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function UsersContent() {
   const queryClient = useQueryClient();
   const { success, error: toastError } = useToast();
@@ -236,7 +330,7 @@ function UsersContent() {
     queryFn: () =>
       userRepository.getAll({
         search: search || undefined,
-        role: roleFilter || undefined,
+        role: (roleFilter as Role) || undefined,
       }),
     placeholderData: (p) => p,
   });
@@ -244,9 +338,9 @@ function UsersContent() {
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["users"] });
 
-  // Toggle active / inactive
   const toggleMutation = useMutation({
-    mutationFn: userRepository.toggleStatus,
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      userRepository.toggleStatus(id, isActive),
     onSuccess: (updated) => {
       invalidate();
       success(
@@ -257,7 +351,6 @@ function UsersContent() {
     onError: () => toastError("Error", "Failed to update status."),
   });
 
-  // Delete
   const deleteMutation = useMutation({
     mutationFn: userRepository.delete,
     onSuccess: () => {
@@ -265,7 +358,8 @@ function UsersContent() {
       success("Deleted", "User account removed.");
       setDeleteTarget(null);
     },
-    onError: () => toastError("Error", "Failed to delete user."),
+    onError: (e: { message?: string }) =>
+      toastError("Error", e.message ?? "Failed to delete user."),
   });
 
   const users = data?.data ?? [];
@@ -306,7 +400,7 @@ function UsersContent() {
           icon={<UserCheck className="w-4 h-4 text-sky-700" />}
           label="Active"
           value={active}
-          color="border-sky-200   bg-sky-50   text-sky-900"
+          color="border-sky-200 bg-sky-50 text-sky-900"
         />
         <SummaryPill
           icon={<UserX className="w-4 h-4 text-amber-700" />}
@@ -336,7 +430,7 @@ function UsersContent() {
             <Select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as Role | "")}
-              options={[{ value: "", label: "All Roles" }, ...ROLE_OPTIONS]}
+              options={ROLE_FILTER_OPTIONS}
               leftIcon={<Shield className="w-4 h-4" />}
             />
           </div>
@@ -398,7 +492,12 @@ function UsersContent() {
                     user={user}
                     index={i}
                     isToggling={toggleMutation.isPending}
-                    onToggle={() => toggleMutation.mutate(user.id)}
+                    onToggle={() =>
+                      toggleMutation.mutate({
+                        id: user.id,
+                        isActive: user.isActive,
+                      })
+                    }
                     onDelete={() => setDeleteTarget(user)}
                   />
                 ))
@@ -420,111 +519,6 @@ function UsersContent() {
         onClose={() => setDeleteTarget(null)}
       />
     </div>
-  );
-}
-
-interface UserRowProps {
-  user: UserType;
-  index: number;
-  isToggling: boolean;
-  onToggle: () => void;
-  onDelete: () => void;
-}
-
-function UserRow({
-  user,
-  index,
-  isToggling,
-  onToggle,
-  onDelete,
-}: UserRowProps) {
-  return (
-    <tr
-      className="hover:bg-surface-50/50 transition-colors animate-fade-in"
-      style={{ animationDelay: `${index * 30}ms` }}
-    >
-      {/* User */}
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "w-9 h-9 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-xs font-bold flex-shrink-0",
-              AVATAR_COLOR[user.role],
-            )}
-          >
-            {getInitials(user.firstName, user.lastName)}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-surface-900">
-              {user.firstName} {user.lastName}
-            </p>
-            <p className="text-xs text-surface-400">{user.email}</p>
-          </div>
-        </div>
-      </td>
-
-      {/* Role */}
-      <td className="px-6 py-4">
-        <RoleBadge role={user.role} />
-      </td>
-
-      {/* Status */}
-      <td className="px-6 py-4">
-        <Badge variant={user.isActive ? "success" : "default"}>
-          {user.isActive ? "Active" : "Inactive"}
-        </Badge>
-      </td>
-
-      {/* Joined */}
-      <td className="px-6 py-4">
-        <p className="text-xs text-surface-500">{formatDate(user.createdAt)}</p>
-      </td>
-
-      {/* Last login */}
-      <td className="px-6 py-4">
-        <p className="text-xs text-surface-500">
-          {user.lastLoginAt ? formatDate(user.lastLoginAt) : "Never"}
-        </p>
-      </td>
-
-      {/* Actions */}
-      <td className="px-6 py-4">
-        <div className="flex items-center justify-end gap-1">
-          {/* Activate / Deactivate */}
-          <button
-            onClick={onToggle}
-            disabled={isToggling}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border",
-              user.isActive
-                ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100",
-              "disabled:opacity-50",
-            )}
-            title={user.isActive ? "Deactivate user" : "Activate user"}
-          >
-            {user.isActive ? (
-              <>
-                <ToggleRight className="w-3.5 h-3.5" /> Deactivate
-              </>
-            ) : (
-              <>
-                <ToggleLeft className="w-3.5 h-3.5" /> Activate
-              </>
-            )}
-          </button>
-
-          {/* Delete */}
-          <button
-            onClick={onDelete}
-            className="p-1.5 rounded-lg text-surface-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-            title="Delete user"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </td>
-    </tr>
   );
 }
 

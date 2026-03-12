@@ -12,7 +12,7 @@ import {
   Lock,
   User,
   ArrowRight,
-  Layers,
+  BriefcaseBusiness,
   CheckCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
@@ -122,28 +122,21 @@ export default function RegisterPage() {
     try {
       await registerUser(payload);
       router.push("/applicant/apply");
-    } catch {
-      // Error handled in store
-    }
+    } catch {}
   };
 
   return (
     <div className="min-h-screen bg-mesh flex items-center justify-center p-6">
       <div className="w-full max-w-md animate-slide-up">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 ...
- flex items-center justify-center shadow-glow"
-          >
-            <Layers className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-glow">
+            <BriefcaseBusiness className="w-5 h-5 text-white" />
           </div>
           <span className="font-display text-2xl font-bold">
-            Recruit<span className="gradient-text">RW</span>
+            Recruit<span className="gradient-text">Moi</span>
           </span>
         </div>
 
-        {/* Card */}
         <div className="card p-8">
           <div className="mb-6 text-center">
             <h1 className="font-display text-2xl font-bold text-surface-900">

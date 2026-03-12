@@ -15,7 +15,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -234,7 +233,14 @@ export default function AdminDashboardPage() {
 
   if (!s) return null;
 
-  const statusTotal = s.applicationsByStatus.reduce((a, b) => a + b.count, 0);
+  const byStatus = s.applicationsByStatus ?? [];
+  const byMonth = s.applicationsByMonth ?? [];
+  const byProvince = s.applicationsByProvince ?? [];
+  const ageGroups = s.ageGroups ?? [];
+  const genderBreakdown = s.genderBreakdown ?? [];
+  const divisionBreakdown = s.divisionBreakdown ?? [];
+  const topPositions = s.topPositions ?? [];
+  const statusTotal = byStatus.reduce((a, b) => a + b.count, 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-10">
@@ -251,7 +257,6 @@ export default function AdminDashboardPage() {
           title="Key Metrics"
           description="Top-level system health at a glance"
         />
-
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Applications"
@@ -260,8 +265,6 @@ export default function AdminDashboardPage() {
             icon={<FileText className="w-4 h-4 text-green-600" />}
             bg="bg-green-50"
             border="border-t-green-500"
-            trend="+3 this month"
-            trendUp
             delay={0}
           />
           <StatCard
@@ -280,8 +283,6 @@ export default function AdminDashboardPage() {
             icon={<CheckCircle2 className="w-4 h-4 text-green-700" />}
             bg="bg-green-100"
             border="border-t-green-600"
-            trend="+2 this week"
-            trendUp
             delay={120}
           />
           <StatCard
@@ -300,8 +301,6 @@ export default function AdminDashboardPage() {
             icon={<Users className="w-4 h-4 text-sky-600" />}
             bg="bg-sky-50"
             border="border-t-sky-500"
-            trend="+1 this week"
-            trendUp
             delay={240}
           />
           <StatCard
@@ -329,8 +328,6 @@ export default function AdminDashboardPage() {
             icon={<Target className="w-4 h-4 text-green-700" />}
             bg="bg-green-50"
             border="border-t-green-500"
-            trend="Above target"
-            trendUp
             delay={420}
           />
         </div>
@@ -342,7 +339,6 @@ export default function AdminDashboardPage() {
           title="Application Analytics"
           description="Trends, status breakdown and geographic distribution"
         />
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <ChartCard
             title="Applications Over Time"
@@ -352,7 +348,7 @@ export default function AdminDashboardPage() {
           >
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart
-                data={s.applicationsByMonth}
+                data={byMonth}
                 margin={{ top: 5, right: 5, bottom: 0, left: -20 }}
               >
                 <defs>
@@ -396,7 +392,7 @@ export default function AdminDashboardPage() {
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie
-                  data={s.applicationsByStatus.map((i) => ({
+                  data={byStatus.map((i) => ({
                     name: i.status,
                     value: i.count,
                   }))}
@@ -407,7 +403,7 @@ export default function AdminDashboardPage() {
                   paddingAngle={3}
                   dataKey="value"
                 >
-                  {s.applicationsByStatus.map((entry) => (
+                  {byStatus.map((entry) => (
                     <Cell
                       key={entry.status}
                       fill={STATUS_COLORS[entry.status] ?? C.slate}
@@ -418,7 +414,7 @@ export default function AdminDashboardPage() {
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-0.5 mt-2">
-              {s.applicationsByStatus.map((e) => (
+              {byStatus.map((e) => (
                 <LegendRow
                   key={e.status}
                   label={e.status.replace("_", " ")}
@@ -430,285 +426,300 @@ export default function AdminDashboardPage() {
             </div>
           </ChartCard>
 
-          <ChartCard
-            title="By Province"
-            icon={<BarChart2 className="w-4 h-4" />}
-            subtitle="Geographic spread of applicants"
-            className="lg:col-span-3"
-          >
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart
-                data={s.applicationsByProvince}
-                margin={{ top: 5, right: 5, bottom: 0, left: -20 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#f1f5f9"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="province"
-                  tick={{ fontSize: 11, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={TT_STYLE} />
-                <Bar
-                  dataKey="count"
-                  name="Applications"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={52}
+          {byProvince.length > 0 && (
+            <ChartCard
+              title="By Province"
+              icon={<BarChart2 className="w-4 h-4" />}
+              subtitle="Geographic spread of applicants"
+              className="lg:col-span-3"
+            >
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={byProvince}
+                  margin={{ top: 5, right: 5, bottom: 0, left: -20 }}
                 >
-                  {s.applicationsByProvince.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={PROVINCE_COLORS[i % PROVINCE_COLORS.length]}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f1f5f9"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="province"
+                    tick={{ fontSize: 11, fill: C.slate }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: C.slate }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={TT_STYLE} />
+                  <Bar
+                    dataKey="count"
+                    name="Applications"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={52}
+                  >
+                    {byProvince.map((_, i) => (
+                      <Cell
+                        key={i}
+                        fill={PROVINCE_COLORS[i % PROVINCE_COLORS.length]}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          )}
         </div>
       </section>
 
-      <section className="space-y-4">
-        <SectionHeader
-          icon={<PieIcon className="w-4 h-4" />}
-          title="Applicant Demographics"
-          description="Age groups, gender distribution and academic performance"
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ChartCard
-            title="Age Groups"
-            icon={<Users className="w-4 h-4" />}
-            subtitle="Applicant age distribution"
-          >
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart
-                data={s.ageGroups}
-                margin={{ top: 5, right: 5, bottom: 0, left: -20 }}
+      {(ageGroups.length > 0 ||
+        genderBreakdown.length > 0 ||
+        divisionBreakdown.length > 0) && (
+        <section className="space-y-4">
+          <SectionHeader
+            icon={<PieIcon className="w-4 h-4" />}
+            title="Applicant Demographics"
+            description="Age groups, gender distribution and academic performance"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {ageGroups.length > 0 && (
+              <ChartCard
+                title="Age Groups"
+                icon={<Users className="w-4 h-4" />}
+                subtitle="Applicant age distribution"
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#f1f5f9"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="group"
-                  tick={{ fontSize: 11, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={TT_STYLE} />
-                <Bar
-                  dataKey="count"
-                  name="Applicants"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={44}
-                >
-                  {s.ageGroups.map((_, i) => (
-                    <Cell key={i} fill={AGE_COLORS[i % AGE_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart
+                    data={ageGroups}
+                    margin={{ top: 5, right: 5, bottom: 0, left: -20 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f1f5f9"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="group"
+                      tick={{ fontSize: 11, fill: C.slate }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: C.slate }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip contentStyle={TT_STYLE} />
+                    <Bar
+                      dataKey="count"
+                      name="Applicants"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={44}
+                    >
+                      {ageGroups.map((_, i) => (
+                        <Cell
+                          key={i}
+                          fill={AGE_COLORS[i % AGE_COLORS.length]}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            )}
 
-          <ChartCard
-            title="Gender Breakdown"
-            icon={<Users className="w-4 h-4" />}
-            subtitle="Male vs Female applicants"
-          >
-            <ResponsiveContainer width="100%" height={160}>
-              <PieChart>
-                <Pie
-                  data={s.genderBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  paddingAngle={4}
-                  dataKey="count"
-                  nameKey="gender"
-                >
-                  {s.genderBreakdown.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={GENDER_COLORS[i % GENDER_COLORS.length]}
+            {genderBreakdown.length > 0 && (
+              <ChartCard
+                title="Gender Breakdown"
+                icon={<Users className="w-4 h-4" />}
+                subtitle="Male vs Female applicants"
+              >
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie
+                      data={genderBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={70}
+                      paddingAngle={4}
+                      dataKey="count"
+                      nameKey="gender"
+                    >
+                      {genderBreakdown.map((_, i) => (
+                        <Cell
+                          key={i}
+                          fill={GENDER_COLORS[i % GENDER_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={TT_STYLE} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-0.5 mt-2">
+                  {genderBreakdown.map((g, i) => (
+                    <LegendRow
+                      key={g.gender}
+                      label={g.gender}
+                      value={g.count}
+                      color={GENDER_COLORS[i % GENDER_COLORS.length]}
+                      total={s.totalApplicants}
                     />
                   ))}
-                </Pie>
-                <Tooltip contentStyle={TT_STYLE} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-0.5 mt-2">
-              {s.genderBreakdown.map((g, i) => (
-                <LegendRow
-                  key={g.gender}
-                  label={g.gender}
-                  value={g.count}
-                  color={GENDER_COLORS[i % GENDER_COLORS.length]}
-                  total={s.totalApplicants}
-                />
-              ))}
-            </div>
-          </ChartCard>
+                </div>
+              </ChartCard>
+            )}
 
-          <ChartCard
-            title="Academic Division"
-            icon={<Award className="w-4 h-4" />}
-            subtitle="Division I vs II distribution"
-          >
-            <div className="space-y-4 mt-2">
-              {s.divisionBreakdown.map((d) => {
-                const pct =
-                  s.totalApplications > 0
-                    ? Math.round((d.count / s.totalApplications) * 100)
-                    : 0;
-                const isDiv1 = d.division === "Division I";
-                return (
-                  <div key={d.division}>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          isDiv1 ? "text-green-700" : "text-amber-700",
-                        )}
-                      >
-                        {d.division}
-                      </span>
-                      <span className="text-surface-500">
-                        {d.count} applicants ({pct}%)
-                      </span>
-                    </div>
-                    <div className="h-3 rounded-full bg-surface-100 overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-700",
-                          isDiv1 ? "bg-green-500" : "bg-amber-400",
-                        )}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-surface-100 grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-green-50 border border-green-100 text-center">
-                <p className="text-xs text-green-600 mb-1">
-                  Avg pts — Approved
-                </p>
-                <p className="font-display text-2xl font-bold text-green-700">
-                  {s.avgPointsApproved}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-center">
-                <p className="text-xs text-rose-600 mb-1">Avg pts — Rejected</p>
-                <p className="font-display text-2xl font-bold text-rose-700">
-                  {s.avgPointsRejected}
-                </p>
-              </div>
-            </div>
-          </ChartCard>
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <SectionHeader
-          icon={<Target className="w-4 h-4" />}
-          title="Most Applied Positions"
-          description="Career roles ranked by application volume"
-        />
-
-        <ChartCard
-          title="Top Positions"
-          icon={<BarChart2 className="w-4 h-4" />}
-          subtitle="Number of applications received per role"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              {s.topPositions.slice(0, 8).map((p, i) => {
-                const maxCount = s.topPositions[0]?.count ?? 1;
-                const pct = Math.round((p.count / maxCount) * 100);
-                return (
-                  <div key={p.position}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="font-medium text-surface-700 truncate max-w-[200px]">
-                        {p.position}
-                      </span>
-                      <span className="font-bold text-surface-900 ml-2 flex-shrink-0">
-                        {p.count}
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-surface-100 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart
-                data={s.topPositions.slice(0, 6).map((p) => ({
-                  ...p,
-                  position:
-                    p.position.length > 18
-                      ? p.position.slice(0, 16) + "…"
-                      : p.position,
-                }))}
-                layout="vertical"
-                margin={{ top: 0, right: 10, bottom: 0, left: 0 }}
+            {divisionBreakdown.length > 0 && (
+              <ChartCard
+                title="Academic Division"
+                icon={<Award className="w-4 h-4" />}
+                subtitle="Division I vs II distribution"
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#f1f5f9"
-                  horizontal={false}
-                />
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 10, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="position"
-                  width={120}
-                  tick={{ fontSize: 10, fill: C.slate }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip contentStyle={TT_STYLE} />
-                <Bar
-                  dataKey="count"
-                  name="Applications"
-                  radius={[0, 6, 6, 0]}
-                  maxBarSize={24}
-                  fill={C.green}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                <div className="space-y-4 mt-2">
+                  {divisionBreakdown.map((d) => {
+                    const pct =
+                      s.totalApplications > 0
+                        ? Math.round((d.count / s.totalApplications) * 100)
+                        : 0;
+                    const isDiv1 = d.division === "Division I";
+                    return (
+                      <div key={d.division}>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span
+                            className={cn(
+                              "font-semibold",
+                              isDiv1 ? "text-green-700" : "text-amber-700",
+                            )}
+                          >
+                            {d.division}
+                          </span>
+                          <span className="text-surface-500">
+                            {d.count} applicants ({pct}%)
+                          </span>
+                        </div>
+                        <div className="h-3 rounded-full bg-surface-100 overflow-hidden">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all duration-700",
+                              isDiv1 ? "bg-green-500" : "bg-amber-400",
+                            )}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-5 pt-4 border-t border-surface-100 grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-green-50 border border-green-100 text-center">
+                    <p className="text-xs text-green-600 mb-1">
+                      Avg pts — Approved
+                    </p>
+                    <p className="font-display text-2xl font-bold text-green-700">
+                      {s.avgPointsApproved}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-center">
+                    <p className="text-xs text-rose-600 mb-1">
+                      Avg pts — Rejected
+                    </p>
+                    <p className="font-display text-2xl font-bold text-rose-700">
+                      {s.avgPointsRejected}
+                    </p>
+                  </div>
+                </div>
+              </ChartCard>
+            )}
           </div>
-        </ChartCard>
-      </section>
+        </section>
+      )}
+
+      {topPositions.length > 0 && (
+        <section className="space-y-4">
+          <SectionHeader
+            icon={<Target className="w-4 h-4" />}
+            title="Most Applied Positions"
+            description="Career roles ranked by application volume"
+          />
+          <ChartCard
+            title="Top Positions"
+            icon={<BarChart2 className="w-4 h-4" />}
+            subtitle="Number of applications received per role"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                {topPositions.slice(0, 8).map((p) => {
+                  const maxCount = topPositions[0]?.count ?? 1;
+                  const pct = Math.round((p.count / maxCount) * 100);
+                  return (
+                    <div key={p.position}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-surface-700 truncate max-w-[200px]">
+                          {p.position}
+                        </span>
+                        <span className="font-bold text-surface-900 ml-2 flex-shrink-0">
+                          {p.count}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-surface-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={topPositions.slice(0, 6).map((p) => ({
+                    ...p,
+                    position:
+                      p.position.length > 18
+                        ? p.position.slice(0, 16) + "…"
+                        : p.position,
+                  }))}
+                  layout="vertical"
+                  margin={{ top: 0, right: 10, bottom: 0, left: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f1f5f9"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10, fill: C.slate }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="position"
+                    width={120}
+                    tick={{ fontSize: 10, fill: C.slate }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip contentStyle={TT_STYLE} />
+                  <Bar
+                    dataKey="count"
+                    name="Applications"
+                    radius={[0, 6, 6, 0]}
+                    maxBarSize={24}
+                    fill={C.green}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+        </section>
+      )}
 
       <section className="space-y-4">
         <SectionHeader
@@ -716,9 +727,7 @@ export default function AdminDashboardPage() {
           title="User System Overview"
           description="Breakdown of accounts by role and activity status"
         />
-
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Role radial chart */}
           <ChartCard
             title="Users by Role"
             icon={<Shield className="w-4 h-4" />}
@@ -746,26 +755,25 @@ export default function AdminDashboardPage() {
                   <Tooltip contentStyle={TT_STYLE} />
                 </RadialBarChart>
               </ResponsiveContainer>
-
               <div className="flex-1 space-y-3">
                 {[
                   {
                     label: "Applicants",
                     value: s.totalApplicants,
                     color: C.green,
-                    bg: "bg-green-50  text-green-800",
+                    bg: "bg-green-50 text-green-800",
                   },
                   {
                     label: "HR Managers",
                     value: s.totalHR,
                     color: C.sky,
-                    bg: "bg-sky-50    text-sky-800",
+                    bg: "bg-sky-50 text-sky-800",
                   },
                   {
                     label: "Super Admins",
                     value: s.totalAdmins,
                     color: C.amber,
-                    bg: "bg-amber-50  text-amber-800",
+                    bg: "bg-amber-50 text-amber-800",
                   },
                 ].map((r) => (
                   <div
@@ -791,7 +799,6 @@ export default function AdminDashboardPage() {
             </div>
           </ChartCard>
 
-          {/* Active vs Inactive */}
           <ChartCard
             title="Active vs Inactive"
             icon={<UserCheck className="w-4 h-4" />}
